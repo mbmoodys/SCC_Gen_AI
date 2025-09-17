@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v2.1</title>
+    <title>AI Analysis - Orbis Integration v3.0</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v2.1 with CORS proxy support');
+            console.log('🚀 Page loaded - v3.0 with CORS proxy support for ALL APIs');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -395,7 +395,7 @@
 
         // Create entitlement
         async function createEntitlement() {
-            console.log('🔑 Creating entitlement with:');
+            console.log('🔑 Creating entitlement with CORS PROXY v3.0:');
             console.log('  - API Client:', CONFIG.API_CLIENT);
             console.log('  - API Key:', CONFIG.API_KEY ? '***' + CONFIG.API_KEY.slice(-4) : 'NOT SET');
             console.log('  - Base URL:', CONFIG.COPILOT_BASE_URL);
@@ -407,11 +407,15 @@
             console.log('  - Entitlement Data:', entitlementData);
 
             const originalUrl = `${CONFIG.COPILOT_BASE_URL}/entitlements`;
+            console.log('  - Original URL:', originalUrl);
+            
             const proxies = [
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`,
                 `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`,
                 `https://cors-anywhere.herokuapp.com/${originalUrl}`
             ];
+            
+            console.log('  - CORS Proxies:', proxies);
             
             let response;
             let lastError;
@@ -430,6 +434,8 @@
                         body: JSON.stringify(entitlementData)
                     });
                     
+                    console.log(`📡 Proxy ${i + 1} response:`, response.status, response.statusText);
+                    
                     if (response.ok) {
                         console.log(`✅ CORS proxy ${i + 1} succeeded for Copilot API`);
                         break;
@@ -441,7 +447,7 @@
                 }
             }
 
-            console.log('📡 Entitlement response:');
+            console.log('📡 Final entitlement response:');
             console.log('  - Status:', response.status);
             console.log('  - Status Text:', response.statusText);
 
