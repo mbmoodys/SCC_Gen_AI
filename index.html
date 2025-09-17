@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v5.0 (Basic Requests)</title>
+    <title>AI Analysis - Orbis Integration v5.1 (Timeout + Patience)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v5.0 with BASIC requests (no CORS proxies)');
+            console.log('🚀 Page loaded - v5.1 with timeout handling for slow Orbis API');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -290,6 +290,7 @@
 
                 // Step 1: Download PDF from Orbis (BASIC VERSION)
                 console.log('📄 Step 1: Starting PDF download from Orbis...');
+                updateStatus('Downloading PDF from Orbis (this may take 2-3 minutes)...', 'info');
                 const pdfBlob = await downloadOrbisPDF();
                 console.log('✅ Step 1: PDF download completed successfully');
                 updateSpinner('Uploading document to AI system...');
@@ -347,7 +348,9 @@
                         'Accept': 'application/pdf',
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                         'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    },
+                    // Add timeout for slow Orbis API
+                    signal: AbortSignal.timeout(180000) // 3 minute timeout
                 });
 
                 console.log('📡 Response received:');
