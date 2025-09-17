@@ -286,36 +286,28 @@
             try {
                 console.log('🚀 Starting AI analysis process...');
                 updateStatus('Starting AI analysis process...', 'info');
-                updateSpinner('Downloading company report...');
+                updateSpinner('Testing Copilot APIs...');
 
-                // Step 1: Download PDF from Orbis
-                console.log('📄 Step 1: Starting PDF download from Orbis...');
-                const pdfBlob = await downloadOrbisPDF();
-                console.log('✅ Step 1: PDF download completed successfully');
-                updateSpinner('Uploading document to AI system...');
+                // TEST MODE: Skip PDF download and test Copilot directly
+                console.log('🧪 TEST MODE: Skipping PDF download, testing Copilot APIs...');
+                updateStatus('TEST MODE: Testing Copilot APIs...', 'info');
 
-                // Step 2: Create entitlement
-                console.log('🔑 Step 2: Creating Copilot entitlement...');
+                // Step 1: Create entitlement (test Copilot)
+                console.log('🔑 Step 1: Testing entitlement creation...');
                 currentEntitlementId = await createEntitlement();
-                console.log('✅ Step 2: Entitlement created successfully:', currentEntitlementId);
-                updateSpinner('Processing document...');
+                console.log('✅ Step 1: Entitlement created successfully:', currentEntitlementId);
+                updateSpinner('Testing AI analysis...');
 
-                // Step 3: Upload PDF to Copilot
-                console.log('📤 Step 3: Uploading PDF to Copilot...');
-                const uploadResult = await uploadToIngestion(pdfBlob, CONFIG.API_CLIENT, CONFIG.API_KEY, currentEntitlementId, 'orbis-report.pdf');
-                console.log('✅ Step 3: PDF uploaded successfully:', uploadResult);
-                updateSpinner('Generating AI analysis...');
-
-                // Step 4: Get AI analysis
-                console.log('🤖 Step 4: Generating AI analysis...');
+                // Step 2: Test AskMyData (without PDF)
+                console.log('🤖 Step 2: Testing AskMyData API...');
                 const analysis = await getAIAnalysis(currentEntitlementId);
-                console.log('✅ Step 4: AI analysis completed');
+                console.log('✅ Step 2: AI analysis completed');
                 
-                // Step 5: Display results
-                console.log('📊 Step 5: Displaying results...');
+                // Step 3: Display results
+                console.log('📊 Step 3: Displaying results...');
                 displayResults(analysis);
-                updateStatus('Analysis completed successfully!', 'success');
-                console.log('🎉 All steps completed successfully!');
+                updateStatus('Copilot APIs working! PDF download needs CORS fix.', 'success');
+                console.log('🎉 Copilot test completed successfully!');
 
             } catch (error) {
                 console.error('❌ Analysis failed:', error);
@@ -341,11 +333,13 @@
             try {
                 console.log('🌐 Making fetch request to Orbis with username/password...');
                 // Try multiple CORS proxies
-                const proxies = [
-                    `https://cors-anywhere.herokuapp.com/${pdfUrl}`,
-                    `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`,
-                    `https://corsproxy.io/?${encodeURIComponent(pdfUrl)}`
-                ];
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(pdfUrl)}`,
+                `https://cors-anywhere.herokuapp.com/${pdfUrl}`,
+                `https://thingproxy.freeboard.io/fetch/${pdfUrl}`,
+                `https://cors.bridged.cc/?${pdfUrl}`
+            ];
                 
                 let response;
                 let lastError;
