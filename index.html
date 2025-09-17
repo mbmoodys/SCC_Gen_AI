@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v8.2 (CORS Proxy for Orbis + Moody)</title>
+    <title>AI Analysis - Orbis Integration v8.3 (Test Moody APIs Only)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v8.2 CORS proxy for Orbis + Moody APIs');
+            console.log('🚀 Page loaded - v8.3 testing Moody APIs only (PDF timeout issue)');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -281,42 +281,33 @@
             console.log('Company info update skipped - elements removed');
         }
 
-        // Start the analysis process - REAL MODE
+        // Start the analysis process - TEST MOODY'S APIs ONLY
         async function startAnalysis() {
             try {
                 console.log('🚀 Starting AI analysis process...');
                 updateStatus('Starting AI analysis process...', 'info');
-                updateSpinner('Downloading company report...');
+                updateSpinner('Testing Moody APIs...');
 
-                // Step 1: Download PDF from Orbis
-                console.log('📄 Step 1: Starting PDF download from Orbis...');
-                updateStatus('Downloading PDF from Orbis (this may take 2-3 minutes)...', 'info');
-                const pdfBlob = await downloadOrbisPDF();
-                console.log('✅ Step 1: PDF download completed successfully');
-                updateSpinner('Uploading document to AI system...');
+                // TEST MODE: Skip PDF download, test Moody's APIs only
+                console.log('🧪 TEST MODE: Testing Moody APIs (PDF download disabled due to timeout)...');
+                updateStatus('TEST MODE: Testing Moody APIs (PDF timeout issue)...', 'info');
 
-                // Step 2: Create entitlement
-                console.log('🔑 Step 2: Creating Copilot entitlement...');
+                // Step 1: Create entitlement (test Moody's API)
+                console.log('🔑 Step 1: Testing entitlement creation...');
                 currentEntitlementId = await createEntitlement();
-                console.log('✅ Step 2: Entitlement created successfully:', currentEntitlementId);
-                updateSpinner('Processing document...');
+                console.log('✅ Step 1: Entitlement created successfully:', currentEntitlementId);
+                updateSpinner('Testing AI analysis...');
 
-                // Step 3: Upload PDF to Copilot
-                console.log('📤 Step 3: Uploading PDF to Copilot...');
-                const uploadResult = await uploadToIngestion(pdfBlob, CONFIG.API_CLIENT, CONFIG.API_KEY, currentEntitlementId, 'orbis-report.pdf');
-                console.log('✅ Step 3: PDF uploaded successfully:', uploadResult);
-                updateSpinner('Generating AI analysis...');
-
-                // Step 4: Get AI analysis
-                console.log('🤖 Step 4: Generating AI analysis...');
+                // Step 2: Test AskMyData (without PDF)
+                console.log('🤖 Step 2: Testing AskMyData API...');
                 const analysis = await getAIAnalysis(currentEntitlementId);
-                console.log('✅ Step 4: AI analysis completed');
+                console.log('✅ Step 2: AI analysis completed');
                 
-                // Step 5: Display results
-                console.log('📊 Step 5: Displaying results...');
+                // Step 3: Display results
+                console.log('📊 Step 3: Displaying results...');
                 displayResults(analysis);
-                updateStatus('Analysis completed successfully!', 'success');
-                console.log('🎉 All steps completed successfully!');
+                updateStatus('Moody APIs working! PDF download needs different approach.', 'success');
+                console.log('🎉 Moody API test completed successfully!');
 
             } catch (error) {
                 console.error('❌ Analysis failed:', error);
@@ -428,14 +419,18 @@
             formData.append('file', blob, filename);
             formData.append('entitlement_id', entitlementId);
 
-            // Try direct API call first
-            console.log('🔗 Trying direct API call to Moody upload...');
+            // Try CORS proxy for upload
+            console.log('🔗 Trying CORS proxy for upload...');
             
-            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/ingestion/upload`, {
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://api.moodys.com/copilot/v1/ingestion/upload';
+            console.log('Using CORS proxy:', proxyUrl);
+            
+            const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
                     'x-api-client': client,
-                    'x-api-key': key
+                    'x-api-key': key,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: formData
             });
@@ -475,15 +470,19 @@
 
 Provide evidence-based insights with specific data points from the report.`;
 
-            // Try direct API call first
-            console.log('🔗 Trying direct API call to AskMyData...');
+            // Try CORS proxy for AskMyData
+            console.log('🔗 Trying CORS proxy for AskMyData...');
             
-            const response = await fetch(CONFIG.ASK_MY_DATA_URL, {
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://api.moodys.com/askmydata/v1/ask';
+            console.log('Using CORS proxy:', proxyUrl);
+            
+            const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-api-client': CONFIG.API_CLIENT,
-                    'x-api-key': CONFIG.API_KEY
+                    'x-api-key': CONFIG.API_KEY,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     source: { name: 'orbis-integration', version: '1.0.0' },
