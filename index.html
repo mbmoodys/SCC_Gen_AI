@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v5.4 (Multiple CORS Proxies)</title>
+    <title>AI Analysis - Orbis Integration v6.0 (Test Mode - Skip PDF)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v5.4 with multiple CORS proxies for Orbis');
+            console.log('🚀 Page loaded - v6.0 TEST MODE (skip PDF download, test Copilot)');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -281,42 +281,33 @@
             console.log('Company info update skipped - elements removed');
         }
 
-        // Start the analysis process
+        // Start the analysis process - TEST MODE (skip PDF download)
         async function startAnalysis() {
             try {
                 console.log('🚀 Starting AI analysis process...');
                 updateStatus('Starting AI analysis process...', 'info');
-                updateSpinner('Downloading company report...');
+                updateSpinner('Testing Copilot APIs...');
 
-                // Step 1: Download PDF from Orbis (BASIC VERSION)
-                console.log('📄 Step 1: Starting PDF download from Orbis...');
-                updateStatus('Downloading PDF from Orbis (this may take 2-3 minutes)...', 'info');
-                const pdfBlob = await downloadOrbisPDF();
-                console.log('✅ Step 1: PDF download completed successfully');
-                updateSpinner('Uploading document to AI system...');
+                // TEST MODE: Skip PDF download and test Copilot directly
+                console.log('🧪 TEST MODE: Skipping PDF download, testing Copilot APIs...');
+                updateStatus('TEST MODE: Testing Copilot APIs (PDF download disabled)...', 'info');
 
-                // Step 2: Create entitlement
-                console.log('🔑 Step 2: Creating Copilot entitlement...');
+                // Step 1: Create entitlement (test Copilot)
+                console.log('🔑 Step 1: Testing entitlement creation...');
                 currentEntitlementId = await createEntitlement();
-                console.log('✅ Step 2: Entitlement created successfully:', currentEntitlementId);
-                updateSpinner('Processing document...');
+                console.log('✅ Step 1: Entitlement created successfully:', currentEntitlementId);
+                updateSpinner('Testing AI analysis...');
 
-                // Step 3: Upload PDF to Copilot
-                console.log('📤 Step 3: Uploading PDF to Copilot...');
-                const uploadResult = await uploadToIngestion(pdfBlob, CONFIG.API_CLIENT, CONFIG.API_KEY, currentEntitlementId, 'orbis-report.pdf');
-                console.log('✅ Step 3: PDF uploaded successfully:', uploadResult);
-                updateSpinner('Generating AI analysis...');
-
-                // Step 4: Get AI analysis
-                console.log('🤖 Step 4: Generating AI analysis...');
+                // Step 2: Test AskMyData (without PDF)
+                console.log('🤖 Step 2: Testing AskMyData API...');
                 const analysis = await getAIAnalysis(currentEntitlementId);
-                console.log('✅ Step 4: AI analysis completed');
+                console.log('✅ Step 2: AI analysis completed');
                 
-                // Step 5: Display results
-                console.log('📊 Step 5: Displaying results...');
+                // Step 3: Display results
+                console.log('📊 Step 3: Displaying results...');
                 displayResults(analysis);
-                updateStatus('Analysis completed successfully!', 'success');
-                console.log('🎉 All steps completed successfully!');
+                updateStatus('Copilot APIs working! PDF download needs different approach.', 'success');
+                console.log('🎉 Copilot test completed successfully!');
 
             } catch (error) {
                 console.error('❌ Analysis failed:', error);
