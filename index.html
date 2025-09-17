@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v8.3 (Test Moody APIs Only)</title>
+    <title>AI Analysis - Orbis Integration v8.4 (Multiple CORS Proxies)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v8.3 testing Moody APIs only (PDF timeout issue)');
+            console.log('🚀 Page loaded - v8.4 trying multiple CORS proxies for Moody APIs');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -380,22 +380,44 @@
             };
             console.log('  - Entitlement Data:', entitlementData);
 
-            // Try using a public CORS proxy that supports custom headers
-            console.log('🔗 Trying CORS proxy with custom headers...');
+            // Try different CORS proxies that don't require activation
+            console.log('🔗 Trying alternative CORS proxies...');
             
-            const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://api.moodys.com/copilot/v1/entitlements';
-            console.log('Using CORS proxy:', proxyUrl);
+            const proxies = [
+                'https://api.allorigins.win/raw?url=https%3A%2F%2Fapi.moodys.com%2Fcopilot%2Fv1%2Fentitlements',
+                'https://thingproxy.freeboard.io/fetch/https://api.moodys.com/copilot/v1/entitlements',
+                'https://cors-anywhere.herokuapp.com/https://api.moodys.com/copilot/v1/entitlements'
+            ];
             
-            const response = await fetch(proxyUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-client': CONFIG.API_CLIENT,
-                    'x-api-key': CONFIG.API_KEY,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(entitlementData)
-            });
+            let response;
+            let lastError;
+            
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    console.log(`🔗 Trying CORS proxy ${i + 1}:`, proxies[i]);
+                    response = await fetch(proxies[i], {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-client': CONFIG.API_CLIENT,
+                            'x-api-key': CONFIG.API_KEY,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(entitlementData)
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`✅ CORS proxy ${i + 1} succeeded`);
+                        break;
+                    } else {
+                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
+                    }
+                } catch (error) {
+                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
+                    lastError = error;
+                    if (i === proxies.length - 1) throw lastError;
+                }
+            }
 
             console.log('📡 Entitlement response:');
             console.log('  - Status:', response.status);
@@ -419,21 +441,43 @@
             formData.append('file', blob, filename);
             formData.append('entitlement_id', entitlementId);
 
-            // Try CORS proxy for upload
-            console.log('🔗 Trying CORS proxy for upload...');
+            // Try multiple CORS proxies for upload
+            console.log('🔗 Trying multiple CORS proxies for upload...');
             
-            const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://api.moodys.com/copilot/v1/ingestion/upload';
-            console.log('Using CORS proxy:', proxyUrl);
+            const proxies = [
+                'https://api.allorigins.win/raw?url=https%3A%2F%2Fapi.moodys.com%2Fcopilot%2Fv1%2Fingestion%2Fupload',
+                'https://thingproxy.freeboard.io/fetch/https://api.moodys.com/copilot/v1/ingestion/upload',
+                'https://cors-anywhere.herokuapp.com/https://api.moodys.com/copilot/v1/ingestion/upload'
+            ];
             
-            const response = await fetch(proxyUrl, {
-                method: 'POST',
-                headers: {
-                    'x-api-client': client,
-                    'x-api-key': key,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            });
+            let response;
+            let lastError;
+            
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    console.log(`🔗 Trying CORS proxy ${i + 1} for upload:`, proxies[i]);
+                    response = await fetch(proxies[i], {
+                        method: 'POST',
+                        headers: {
+                            'x-api-client': client,
+                            'x-api-key': key,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`✅ CORS proxy ${i + 1} succeeded for upload`);
+                        break;
+                    } else {
+                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
+                    }
+                } catch (error) {
+                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
+                    lastError = error;
+                    if (i === proxies.length - 1) throw lastError;
+                }
+            }
 
             if (!response.ok) {
                 throw new Error(`Upload failed: ${response.status}`);
@@ -470,31 +514,53 @@
 
 Provide evidence-based insights with specific data points from the report.`;
 
-            // Try CORS proxy for AskMyData
-            console.log('🔗 Trying CORS proxy for AskMyData...');
+            // Try multiple CORS proxies for AskMyData
+            console.log('🔗 Trying multiple CORS proxies for AskMyData...');
             
-            const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://api.moodys.com/askmydata/v1/ask';
-            console.log('Using CORS proxy:', proxyUrl);
+            const proxies = [
+                'https://api.allorigins.win/raw?url=https%3A%2F%2Fapi.moodys.com%2Faskmydata%2Fv1%2Fask',
+                'https://thingproxy.freeboard.io/fetch/https://api.moodys.com/askmydata/v1/ask',
+                'https://cors-anywhere.herokuapp.com/https://api.moodys.com/askmydata/v1/ask'
+            ];
             
-            const response = await fetch(proxyUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-client': CONFIG.API_CLIENT,
-                    'x-api-key': CONFIG.API_KEY,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    source: { name: 'orbis-integration', version: '1.0.0' },
-                    stream: false,
-                    system_prompt: systemPrompt,
-                    messages: [{
-                        role: 'user',
-                        content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
-                    }],
-                    entitlement_ids: [entitlementId]
-                })
-            });
+            let response;
+            let lastError;
+            
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    console.log(`🔗 Trying CORS proxy ${i + 1} for AskMyData:`, proxies[i]);
+                    response = await fetch(proxies[i], {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-client': CONFIG.API_CLIENT,
+                            'x-api-key': CONFIG.API_KEY,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            source: { name: 'orbis-integration', version: '1.0.0' },
+                            stream: false,
+                            system_prompt: systemPrompt,
+                            messages: [{
+                                role: 'user',
+                                content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
+                            }],
+                            entitlement_ids: [entitlementId]
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`✅ CORS proxy ${i + 1} succeeded for AskMyData`);
+                        break;
+                    } else {
+                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
+                    }
+                } catch (error) {
+                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
+                    lastError = error;
+                    if (i === proxies.length - 1) throw lastError;
+                }
+            }
 
             if (!response.ok) {
                 throw new Error(`AI analysis failed: ${response.status}`);
