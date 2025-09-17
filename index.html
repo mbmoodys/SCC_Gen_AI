@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v5.1 (Timeout + Patience)</title>
+    <title>AI Analysis - Orbis Integration v5.3 (CORS Proxy Fix)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v5.1 with timeout handling for slow Orbis API');
+            console.log('🚀 Page loaded - v5.3 with CORS proxy fix for Orbis redirects');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -340,14 +340,17 @@
             console.log('  - PDF URL:', pdfUrl);
             
             try {
-                console.log('🌐 Making DIRECT fetch request to Orbis (no CORS proxies)...');
+                console.log('🌐 Making fetch request to Orbis via CORS proxy (handles redirects)...');
                 
-                const response = await fetch(pdfUrl, {
+                // Use CORS proxy to handle redirects
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`;
+                console.log('🔗 Using CORS proxy:', proxyUrl);
+                
+                const response = await fetch(proxyUrl, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/pdf',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                     },
                     // Add timeout for slow Orbis API
                     signal: AbortSignal.timeout(180000) // 3 minute timeout
