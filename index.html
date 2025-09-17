@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration</title>
+    <title>AI Analysis - Orbis Integration v2.1</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,6 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Page loaded - v2.1 with CORS proxy support');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
