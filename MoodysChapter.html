@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Analysis - Orbis Integration</title>
+    <style>
+        /* Orbis Color Scheme */
+        :root {
+            --orbis-blue: #001489;
+            --orbis-light-blue: #e6f4ff;
+            --orbis-white: #ffffff;
+            --orbis-gray: #f5f5f5;
+            --orbis-text: #333333;
+            --orbis-border: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--orbis-gray);
+            color: var(--orbis-text);
+            line-height: 1.6;
+        }
+
+        /* Orbis Header */
+        .orbis-header {
+            background: linear-gradient(135deg, var(--orbis-blue) 0%, #0033cc 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 20, 137, 0.3);
+        }
+
+        .orbis-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .orbis-header .icon {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--orbis-blue);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Company Info Card */
+        .company-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--orbis-blue);
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--orbis-blue);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .company-details {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .company-id {
+            background: var(--orbis-light-blue);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--orbis-blue);
+            display: inline-block;
+        }
+
+        /* Analysis Section */
+        .analysis-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+        }
+
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--orbis-light-blue);
+        }
+
+        .analysis-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--orbis-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Spinner */
+        .spinner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--orbis-light-blue);
+            border-top: 4px solid var(--orbis-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner-text {
+            color: var(--orbis-blue);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* AI Output */
+        .ai-output {
+            background: #f8f9fa;
+            border: 1px solid var(--orbis-border);
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .ai-output h3 {
+            color: var(--orbis-blue);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .ai-output ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .ai-output li {
+            margin-bottom: 8px;
+        }
+
+        /* Status Messages */
+        .status-message {
+            background: var(--orbis-light-blue);
+            border: 1px solid var(--orbis-blue);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: var(--orbis-blue);
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: #ffe6e6;
+            border: 1px solid #ff6b6b;
+            color: #d63031;
+        }
+
+        .success-message {
+            background: #e6ffe6;
+            border: 1px solid #00b894;
+            color: #00b894;
+        }
+
+        /* Hidden elements */
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+            
+            .company-name {
+                font-size: 24px;
+            }
+            
+            .analysis-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- Analysis Section -->
+        <div class="analysis-section">
+
+            <!-- Status Messages -->
+            <div id="statusContainer"></div>
+
+            <!-- Spinner -->
+            <div id="spinnerContainer" class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-text" id="spinnerText">Initializing AI Analysis...</div>
+            </div>
+
+            <!-- AI Output -->
+            <div id="aiOutput" class="ai-output hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Update these with your actual values
+        const CONFIG = {
+            API_CLIENT: '4e592a57-e663-4ab5-a298-55b0b3b808e7',
+            API_KEY: '150fa4e6272a8ba660bbf49ee6a2baf7c280a11402ee46aa57be5a1b688cc80c',
+            COPILOT_BASE_URL: 'https://api.moodys.com/copilot/v1',
+            ASK_MY_DATA_URL: 'https://api.moodys.com/askmydata/v1/ask'
+        };
+
+        // Global variables
+        let currentBvDID = null;
+        let currentEntitlementId = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Extract BvD ID from URL parameters or set default for testing
+            const urlParams = new URLSearchParams(window.location.search);
+            currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
+            
+            updateCompanyInfo();
+            startAnalysis();
+        });
+
+        // Update company information display
+        function updateCompanyInfo() {
+            document.getElementById('companyName').textContent = 'Company Analysis';
+            document.getElementById('companyLocation').textContent = 'Loading company details...';
+            document.getElementById('companyBvDID').textContent = `BvD ID: ${currentBvDID}`;
+        }
+
+        // Start the analysis process
+        async function startAnalysis() {
+            try {
+                updateStatus('Starting AI analysis process...', 'info');
+                updateSpinner('Downloading company report...');
+
+                // Step 1: Download PDF from Orbis
+                const pdfBlob = await downloadOrbisPDF();
+                updateSpinner('Uploading document to AI system...');
+
+                // Step 2: Create entitlement
+                currentEntitlementId = await createEntitlement();
+                updateSpinner('Processing document...');
+
+                // Step 3: Upload PDF to Copilot
+                const uploadResult = await uploadToIngestion(pdfBlob, CONFIG.API_CLIENT, CONFIG.API_KEY, currentEntitlementId, 'orbis-report.pdf');
+                updateSpinner('Generating AI analysis...');
+
+                // Step 4: Get AI analysis
+                const analysis = await getAIAnalysis(currentEntitlementId);
+                
+                // Step 5: Display results
+                displayResults(analysis);
+                updateStatus('Analysis completed successfully!', 'success');
+
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                updateStatus(`Analysis failed: ${error.message}`, 'error');
+                updateSpinner('Analysis failed. Please try again.');
+            }
+        }
+
+        // Download PDF from Orbis
+        async function downloadOrbisPDF() {
+            // Use the real context token from your Orbis session
+            const contextToken = 'EIgl1ee1kOrEDFlfNVOSdLKPSCnxINmhUg9lz3n7NLCor0C6b7SFVLP9QlM8hoocvQ';
+            
+            const pdfUrl = `https://orbis.bvdinfo.com/Orbis/companies/Report?BvDID=${currentBvDID}&export=pdf&loginfromcontext=${contextToken}`;
+            
+            console.log('Using context token:', contextToken);
+            console.log('PDF URL:', pdfUrl);
+            
+            try {
+                const response = await fetch(pdfUrl, {
+                    method: 'GET',
+                    credentials: 'include', // Include cookies for authentication
+                    headers: {
+                        'Accept': 'application/pdf',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to download PDF: ${response.status} ${response.statusText}`);
+                }
+
+                const blob = await response.blob();
+                console.log('PDF downloaded successfully:', blob.size, 'bytes');
+                return blob;
+            } catch (error) {
+                throw new Error(`PDF download failed: ${error.message}`);
+            }
+        }
+
+        // Create entitlement
+        async function createEntitlement() {
+            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/entitlements`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-client': CONFIG.API_CLIENT,
+                    'x-api-key': CONFIG.API_KEY
+                },
+                body: JSON.stringify({
+                    name: `Orbis Analysis - ${currentBvDID}`,
+                    description: `AI analysis of Orbis report for company ${currentBvDID}`
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to create entitlement: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Entitlement created:', result.id);
+            return result.id;
+        }
+
+        // Upload to ingestion
+        async function uploadToIngestion(blob, client, key, entitlementId, filename) {
+            const formData = new FormData();
+            formData.append('file', blob, filename);
+            formData.append('entitlement_id', entitlementId);
+
+            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/ingestion/upload`, {
+                method: 'POST',
+                headers: {
+                    'x-api-client': client,
+                    'x-api-key': key
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Upload successful:', result.document_id);
+            return result.document_id;
+        }
+
+        // Get AI analysis
+        async function getAIAnalysis(entitlementId) {
+            const systemPrompt = `You are a senior financial analyst at Moody's. Analyze the provided Orbis company report and provide a comprehensive analysis covering:
+
+1. COMPANY OVERVIEW:
+   - Business model and key operations
+   - Market position and competitive advantages
+   - Recent developments and strategic initiatives
+
+2. FINANCIAL ANALYSIS:
+   - Key financial metrics and trends
+   - Revenue, profitability, and growth patterns
+   - Financial strength and risk indicators
+
+3. RISK ASSESSMENT:
+   - Credit risk factors
+   - Market and operational risks
+   - Regulatory and compliance considerations
+
+4. INVESTMENT OUTLOOK:
+   - Growth prospects and opportunities
+   - Key challenges and headwinds
+   - Overall investment recommendation
+
+Provide evidence-based insights with specific data points from the report.`;
+
+            const response = await fetch(CONFIG.ASK_MY_DATA_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-client': CONFIG.API_CLIENT,
+                    'x-api-key': CONFIG.API_KEY
+                },
+                body: JSON.stringify({
+                    source: { name: 'orbis-integration', version: '1.0.0' },
+                    stream: false,
+                    system_prompt: systemPrompt,
+                    messages: [{
+                        role: 'user',
+                        content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
+                    }],
+                    entitlement_ids: [entitlementId]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`AI analysis failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            return result.response?.content || result.data?.[0]?.response?.content || 'Analysis completed but no content returned.';
+        }
+
+        // Update status message
+        function updateStatus(message, type = 'info') {
+            const container = document.getElementById('statusContainer');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message ${type === 'error' ? 'error-message' : type === 'success' ? 'success-message' : ''}`;
+            statusDiv.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(statusDiv);
+        }
+
+        // Update spinner text
+        function updateSpinner(text) {
+            document.getElementById('spinnerText').textContent = text;
+        }
+
+        // Display results
+        function displayResults(analysis) {
+            document.getElementById('spinnerContainer').classList.add('hidden');
+            document.getElementById('aiOutput').classList.remove('hidden');
+            document.getElementById('aiOutput').textContent = analysis;
+        }
+    </script>
+</body>
+</html>
