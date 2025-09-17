@@ -326,18 +326,20 @@
 
         // Download PDF from Orbis
         async function downloadOrbisPDF() {
-            // Use the real context token from your Orbis session
-            const contextToken = 'EIgl1ee1kOrEDFlfNVOSdLKPSCnxINmhUg9lz3n7NLCor0C6b7SFVLP9QlM8hoocvQ';
+            // Use username and password authentication
+            const username = 'smartURLArchitect';
+            const password = 'SmartURL1234!'; // You'll need to provide this
             
-            const pdfUrl = `https://orbis.bvdinfo.com/Orbis/companies/Report?BvDID=${currentBvDID}&export=pdf&loginfromcontext=${contextToken}`;
+            const pdfUrl = `https://orbis.bvdinfo.com/Orbis/companies/Report?BvDID=${currentBvDID}&export=pdf&user=${encodeURIComponent(username)}&pw=${encodeURIComponent(password)}`;
             
             console.log('🔍 PDF Download Details:');
             console.log('  - BvD ID:', currentBvDID);
-            console.log('  - Context Token:', contextToken);
+            console.log('  - Username:', username);
+            console.log('  - Password:', password ? '***' + password.slice(-4) : 'NOT SET');
             console.log('  - PDF URL:', pdfUrl);
             
             try {
-                console.log('🌐 Making fetch request to Orbis...');
+                console.log('🌐 Making fetch request to Orbis with username/password...');
                 // Try multiple CORS proxies
                 const proxies = [
                     `https://cors-anywhere.herokuapp.com/${pdfUrl}`,
