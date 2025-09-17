@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moody's API Proxy</title>
+</head>
+<body>
+    <h1>Moody's API Proxy</h1>
+    <p>This proxy handles CORS issues for Moody's APIs and Orbis PDF downloads.</p>
+    
+    <script>
+        // JavaScript proxy that works on GitHub Pages
+        const PROXY_URL = window.location.origin + window.location.pathname;
+        
+        // Handle all requests
+        if (window.location.search) {
+            const params = new URLSearchParams(window.location.search);
+            const targetUrl = params.get('url');
+            const method = params.get('method') || 'GET';
+            const headers = JSON.parse(params.get('headers') || '{}');
+            const body = params.get('body');
+            
+            if (targetUrl) {
+                console.log('Proxying request to:', targetUrl);
+                console.log('Method:', method);
+                console.log('Headers:', headers);
+                
+                // Make the request
+                fetch(targetUrl, {
+                    method: method,
+                    headers: {
+                        'Accept': 'application/json, application/pdf, */*',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        ...headers
+                    },
+                    body: body || undefined
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.text();
+                })
+                .then(data => {
+                    document.body.innerHTML = `
+                        <h1>Proxy Response</h1>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Target URL:</strong> ${targetUrl}</p>
+                        <p><strong>Method:</strong> ${method}</p>
+                        <pre>${data}</pre>
+                    `;
+                })
+                .catch(error => {
+                    document.body.innerHTML = `
+                        <h1>Proxy Error</h1>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Target URL:</strong> ${targetUrl}</p>
+                    `;
+                });
+            }
+        }
+    </script>
+</body>
+</html>
