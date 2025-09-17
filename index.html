@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v6.2 (Multiple CORS Proxies for POST)</title>
+    <title>AI Analysis - Orbis Integration v7.0 (Demo Mode - CORS Issue)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v6.2 with multiple CORS proxies for POST requests');
+            console.log('🚀 Page loaded - v7.0 DEMO MODE (CORS proxies blocked custom headers)');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -281,33 +281,56 @@
             console.log('Company info update skipped - elements removed');
         }
 
-        // Start the analysis process - TEST MODE (skip PDF download)
+        // Start the analysis process - DEMO MODE (mock data)
         async function startAnalysis() {
             try {
                 console.log('🚀 Starting AI analysis process...');
                 updateStatus('Starting AI analysis process...', 'info');
-                updateSpinner('Testing Copilot APIs...');
+                updateSpinner('Generating demo analysis...');
 
-                // TEST MODE: Skip PDF download and test Copilot directly
-                console.log('🧪 TEST MODE: Skipping PDF download, testing Copilot APIs...');
-                updateStatus('TEST MODE: Testing Copilot APIs (PDF download disabled)...', 'info');
+                // DEMO MODE: Show what the final result would look like
+                console.log('🎭 DEMO MODE: Showing mock analysis (CORS proxies blocked custom headers)...');
+                updateStatus('DEMO MODE: CORS proxies cannot handle custom headers for Moody APIs', 'info');
 
-                // Step 1: Create entitlement (test Copilot)
-                console.log('🔑 Step 1: Testing entitlement creation...');
-                currentEntitlementId = await createEntitlement();
-                console.log('✅ Step 1: Entitlement created successfully:', currentEntitlementId);
-                updateSpinner('Testing AI analysis...');
-
-                // Step 2: Test AskMyData (without PDF)
-                console.log('🤖 Step 2: Testing AskMyData API...');
-                const analysis = await getAIAnalysis(currentEntitlementId);
-                console.log('✅ Step 2: AI analysis completed');
+                // Simulate the analysis process
+                await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
                 
-                // Step 3: Display results
-                console.log('📊 Step 3: Displaying results...');
-                displayResults(analysis);
-                updateStatus('Copilot APIs working! PDF download needs different approach.', 'success');
-                console.log('🎉 Copilot test completed successfully!');
+                // Step 1: Mock entitlement creation
+                console.log('🔑 Step 1: Mock entitlement creation...');
+                currentEntitlementId = 'demo-entitlement-123';
+                console.log('✅ Step 1: Mock entitlement created:', currentEntitlementId);
+                updateSpinner('Generating AI analysis...');
+
+                // Step 2: Mock AI analysis
+                console.log('🤖 Step 2: Mock AI analysis...');
+                await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+                
+                // Step 3: Display mock results
+                console.log('📊 Step 3: Displaying mock results...');
+                const mockAnalysis = `# AI-Generated Financial Analysis
+
+## Company Overview
+**Bureau van Dijk (BvD)** is a leading provider of business intelligence and company information services. The company operates in the financial data and analytics sector, serving banks, insurance companies, and other financial institutions worldwide.
+
+## Key Financial Highlights
+- **Revenue Growth**: Consistent year-over-year growth in the data services segment
+- **Market Position**: Strong competitive advantage in European business intelligence
+- **Client Base**: Diversified portfolio of financial institutions and corporations
+
+## Risk Assessment
+- **Credit Risk**: Low to moderate risk profile
+- **Market Risk**: Exposure to financial services sector volatility
+- **Operational Risk**: Well-established business model with recurring revenue
+
+## Investment Recommendation
+**HOLD** - The company demonstrates stable financial performance with growth potential in the expanding business intelligence market.
+
+---
+*This is a demo analysis. In production, this would be generated by Moody's AI using the actual Orbis company report.*`;
+
+                displayResults(mockAnalysis);
+                updateStatus('Demo completed! CORS issue: Custom headers not allowed by proxies.', 'success');
+                console.log('🎉 Demo completed successfully!');
 
             } catch (error) {
                 console.error('❌ Analysis failed:', error);
