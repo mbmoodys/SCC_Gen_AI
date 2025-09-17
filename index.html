@@ -337,14 +337,38 @@
             
             try {
                 console.log('🌐 Making fetch request to Orbis...');
-                const response = await fetch(pdfUrl, {
-                    method: 'GET',
-                    credentials: 'include', // Include cookies for authentication
-                    headers: {
-                        'Accept': 'application/pdf',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                // Try multiple CORS proxies
+                const proxies = [
+                    `https://cors-anywhere.herokuapp.com/${pdfUrl}`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(pdfUrl)}`
+                ];
+                
+                let response;
+                let lastError;
+                
+                for (let i = 0; i < proxies.length; i++) {
+                    try {
+                        console.log(`🔗 Trying CORS proxy ${i + 1}:`, proxies[i]);
+                        response = await fetch(proxies[i], {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/pdf',
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            console.log(`✅ CORS proxy ${i + 1} succeeded`);
+                            break;
+                        }
+                    } catch (error) {
+                        console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
+                        lastError = error;
+                        if (i === proxies.length - 1) throw lastError;
                     }
-                });
+                }
 
                 console.log('📡 Response received:');
                 console.log('  - Status:', response.status);
