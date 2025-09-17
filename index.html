@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v7.0 (Demo Mode - CORS Issue)</title>
+    <title>AI Analysis - Orbis Integration v8.0 (Direct API Calls)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v7.0 DEMO MODE (CORS proxies blocked custom headers)');
+            console.log('🚀 Page loaded - v8.0 trying direct API calls to Moody');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -281,56 +281,42 @@
             console.log('Company info update skipped - elements removed');
         }
 
-        // Start the analysis process - DEMO MODE (mock data)
+        // Start the analysis process - REAL MODE
         async function startAnalysis() {
             try {
                 console.log('🚀 Starting AI analysis process...');
                 updateStatus('Starting AI analysis process...', 'info');
-                updateSpinner('Generating demo analysis...');
+                updateSpinner('Downloading company report...');
 
-                // DEMO MODE: Show what the final result would look like
-                console.log('🎭 DEMO MODE: Showing mock analysis (CORS proxies blocked custom headers)...');
-                updateStatus('DEMO MODE: CORS proxies cannot handle custom headers for Moody APIs', 'info');
+                // Step 1: Download PDF from Orbis
+                console.log('📄 Step 1: Starting PDF download from Orbis...');
+                updateStatus('Downloading PDF from Orbis (this may take 2-3 minutes)...', 'info');
+                const pdfBlob = await downloadOrbisPDF();
+                console.log('✅ Step 1: PDF download completed successfully');
+                updateSpinner('Uploading document to AI system...');
 
-                // Simulate the analysis process
-                await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
-                
-                // Step 1: Mock entitlement creation
-                console.log('🔑 Step 1: Mock entitlement creation...');
-                currentEntitlementId = 'demo-entitlement-123';
-                console.log('✅ Step 1: Mock entitlement created:', currentEntitlementId);
+                // Step 2: Create entitlement
+                console.log('🔑 Step 2: Creating Copilot entitlement...');
+                currentEntitlementId = await createEntitlement();
+                console.log('✅ Step 2: Entitlement created successfully:', currentEntitlementId);
+                updateSpinner('Processing document...');
+
+                // Step 3: Upload PDF to Copilot
+                console.log('📤 Step 3: Uploading PDF to Copilot...');
+                const uploadResult = await uploadToIngestion(pdfBlob, CONFIG.API_CLIENT, CONFIG.API_KEY, currentEntitlementId, 'orbis-report.pdf');
+                console.log('✅ Step 3: PDF uploaded successfully:', uploadResult);
                 updateSpinner('Generating AI analysis...');
 
-                // Step 2: Mock AI analysis
-                console.log('🤖 Step 2: Mock AI analysis...');
-                await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+                // Step 4: Get AI analysis
+                console.log('🤖 Step 4: Generating AI analysis...');
+                const analysis = await getAIAnalysis(currentEntitlementId);
+                console.log('✅ Step 4: AI analysis completed');
                 
-                // Step 3: Display mock results
-                console.log('📊 Step 3: Displaying mock results...');
-                const mockAnalysis = `# AI-Generated Financial Analysis
-
-## Company Overview
-**Bureau van Dijk (BvD)** is a leading provider of business intelligence and company information services. The company operates in the financial data and analytics sector, serving banks, insurance companies, and other financial institutions worldwide.
-
-## Key Financial Highlights
-- **Revenue Growth**: Consistent year-over-year growth in the data services segment
-- **Market Position**: Strong competitive advantage in European business intelligence
-- **Client Base**: Diversified portfolio of financial institutions and corporations
-
-## Risk Assessment
-- **Credit Risk**: Low to moderate risk profile
-- **Market Risk**: Exposure to financial services sector volatility
-- **Operational Risk**: Well-established business model with recurring revenue
-
-## Investment Recommendation
-**HOLD** - The company demonstrates stable financial performance with growth potential in the expanding business intelligence market.
-
----
-*This is a demo analysis. In production, this would be generated by Moody's AI using the actual Orbis company report.*`;
-
-                displayResults(mockAnalysis);
-                updateStatus('Demo completed! CORS issue: Custom headers not allowed by proxies.', 'success');
-                console.log('🎉 Demo completed successfully!');
+                // Step 5: Display results
+                console.log('📊 Step 5: Displaying results...');
+                displayResults(analysis);
+                updateStatus('Analysis completed successfully!', 'success');
+                console.log('🎉 All steps completed successfully!');
 
             } catch (error) {
                 console.error('❌ Analysis failed:', error);
@@ -414,9 +400,9 @@
 
         // Create entitlement
         async function createEntitlement() {
-            console.log('🔑 Creating entitlement (via CORS proxy):');
+            console.log('🔑 Creating entitlement (via serverless proxy):');
             console.log('  - API Client:', CONFIG.API_CLIENT);
-            console.log('  - API Key:', CONFIG.API_KEY ? '***' + CONFIG.API_KEY.slice(-4) : 'NOT SET');
+            console.log('  - API Key:', CONFIG.API_CLIENT ? '***' + CONFIG.API_CLIENT.slice(-4) : 'NOT SET');
             console.log('  - Base URL:', CONFIG.COPILOT_BASE_URL);
             
             const entitlementData = {
@@ -425,42 +411,18 @@
             };
             console.log('  - Entitlement Data:', entitlementData);
 
-            // Try multiple CORS proxies for POST requests
-            const apiUrl = `${CONFIG.COPILOT_BASE_URL}/entitlements`;
-            const proxies = [
-                `https://cors-anywhere.herokuapp.com/${apiUrl}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`,
-                `https://thingproxy.freeboard.io/fetch/${apiUrl}`
-            ];
+            // Try direct API call first (might work from some domains)
+            console.log('🔗 Trying direct API call to Moody...');
             
-            let response;
-            let lastError;
-            
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    console.log(`🔗 Trying CORS proxy ${i + 1} for Moody API:`, proxies[i]);
-                    response = await fetch(proxies[i], {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-client': CONFIG.API_CLIENT,
-                            'x-api-key': CONFIG.API_KEY
-                        },
-                        body: JSON.stringify(entitlementData)
-                    });
-                    
-                    if (response.ok) {
-                        console.log(`✅ CORS proxy ${i + 1} succeeded for Moody API`);
-                        break;
-                    } else {
-                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
-                    }
-                } catch (error) {
-                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
-                    lastError = error;
-                    if (i === proxies.length - 1) throw lastError;
-                }
-            }
+            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/entitlements`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-client': CONFIG.API_CLIENT,
+                    'x-api-key': CONFIG.API_KEY
+                },
+                body: JSON.stringify(entitlementData)
+            });
 
             console.log('📡 Entitlement response:');
             console.log('  - Status:', response.status);
@@ -484,41 +446,17 @@
             formData.append('file', blob, filename);
             formData.append('entitlement_id', entitlementId);
 
-            // Try multiple CORS proxies for upload
-            const apiUrl = `${CONFIG.COPILOT_BASE_URL}/ingestion/upload`;
-            const proxies = [
-                `https://cors-anywhere.herokuapp.com/${apiUrl}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`,
-                `https://thingproxy.freeboard.io/fetch/${apiUrl}`
-            ];
+            // Try direct API call first
+            console.log('🔗 Trying direct API call to Moody upload...');
             
-            let response;
-            let lastError;
-            
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    console.log(`🔗 Trying CORS proxy ${i + 1} for upload:`, proxies[i]);
-                    response = await fetch(proxies[i], {
-                        method: 'POST',
-                        headers: {
-                            'x-api-client': client,
-                            'x-api-key': key
-                        },
-                        body: formData
-                    });
-                    
-                    if (response.ok) {
-                        console.log(`✅ CORS proxy ${i + 1} succeeded for upload`);
-                        break;
-                    } else {
-                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
-                    }
-                } catch (error) {
-                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
-                    lastError = error;
-                    if (i === proxies.length - 1) throw lastError;
-                }
-            }
+            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/ingestion/upload`, {
+                method: 'POST',
+                headers: {
+                    'x-api-client': client,
+                    'x-api-key': key
+                },
+                body: formData
+            });
 
             if (!response.ok) {
                 throw new Error(`Upload failed: ${response.status}`);
@@ -555,50 +493,27 @@
 
 Provide evidence-based insights with specific data points from the report.`;
 
-            // Try multiple CORS proxies for AskMyData
-            const proxies = [
-                `https://cors-anywhere.herokuapp.com/${CONFIG.ASK_MY_DATA_URL}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(CONFIG.ASK_MY_DATA_URL)}`,
-                `https://thingproxy.freeboard.io/fetch/${CONFIG.ASK_MY_DATA_URL}`
-            ];
+            // Try direct API call first
+            console.log('🔗 Trying direct API call to AskMyData...');
             
-            let response;
-            let lastError;
-            
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    console.log(`🔗 Trying CORS proxy ${i + 1} for AskMyData:`, proxies[i]);
-                    response = await fetch(proxies[i], {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-client': CONFIG.API_CLIENT,
-                            'x-api-key': CONFIG.API_KEY
-                        },
-                        body: JSON.stringify({
-                            source: { name: 'orbis-integration', version: '1.0.0' },
-                            stream: false,
-                            system_prompt: systemPrompt,
-                            messages: [{
-                                role: 'user',
-                                content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
-                            }],
-                            entitlement_ids: [entitlementId]
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        console.log(`✅ CORS proxy ${i + 1} succeeded for AskMyData`);
-                        break;
-                    } else {
-                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
-                    }
-                } catch (error) {
-                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
-                    lastError = error;
-                    if (i === proxies.length - 1) throw lastError;
-                }
-            }
+            const response = await fetch(CONFIG.ASK_MY_DATA_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-client': CONFIG.API_CLIENT,
+                    'x-api-key': CONFIG.API_KEY
+                },
+                body: JSON.stringify({
+                    source: { name: 'orbis-integration', version: '1.0.0' },
+                    stream: false,
+                    system_prompt: systemPrompt,
+                    messages: [{
+                        role: 'user',
+                        content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
+                    }],
+                    entitlement_ids: [entitlementId]
+                })
+            });
 
             if (!response.ok) {
                 throw new Error(`AI analysis failed: ${response.status}`);
