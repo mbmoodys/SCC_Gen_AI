@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v8.4 (Multiple CORS Proxies)</title>
+    <title>AI Analysis - Orbis Integration v9.0 (Custom Proxy Server)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v8.4 trying multiple CORS proxies for Moody APIs');
+            console.log('🚀 Page loaded - v9.0 using custom proxy server for all APIs');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -331,18 +331,26 @@
             console.log('  - PDF URL:', pdfUrl);
             
             try {
-                console.log('🌐 Making request to Orbis via CORS proxy...');
+                console.log('🌐 Making request to Orbis via custom proxy...');
                 
-                // Use CORS proxy for Orbis (GET request works)
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`;
-                console.log('🔗 Using CORS proxy:', proxyUrl);
+                // Use your own proxy server for Orbis PDF
+                const proxyUrl = 'https://mbmoodys.github.io/proxy.php';
+                console.log('🔗 Using custom proxy:', proxyUrl);
+                console.log('Target URL:', pdfUrl);
                 
                 const response = await fetch(proxyUrl, {
-                    method: 'GET',
+                    method: 'POST',
                     headers: {
-                        'Accept': 'application/pdf',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        'Content-Type': 'application/x-www-form-urlencoded'
                     },
+                    body: new URLSearchParams({
+                        url: pdfUrl,
+                        method: 'GET',
+                        headers: JSON.stringify({
+                            'Accept': 'application/pdf',
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        })
+                    }),
                     // Add timeout for slow Orbis API
                     signal: AbortSignal.timeout(180000) // 3 minute timeout
                 });
@@ -380,44 +388,30 @@
             };
             console.log('  - Entitlement Data:', entitlementData);
 
-            // Try different CORS proxies that don't require activation
-            console.log('🔗 Trying alternative CORS proxies...');
+            // Use your own proxy server
+            console.log('🔗 Using custom proxy server...');
             
-            const proxies = [
-                'https://api.allorigins.win/raw?url=https%3A%2F%2Fapi.moodys.com%2Fcopilot%2Fv1%2Fentitlements',
-                'https://thingproxy.freeboard.io/fetch/https://api.moodys.com/copilot/v1/entitlements',
-                'https://cors-anywhere.herokuapp.com/https://api.moodys.com/copilot/v1/entitlements'
-            ];
+            const proxyUrl = 'https://mbmoodys.github.io/proxy.php';
+            const targetUrl = `${CONFIG.COPILOT_BASE_URL}/entitlements`;
+            console.log('Using custom proxy:', proxyUrl);
+            console.log('Target URL:', targetUrl);
             
-            let response;
-            let lastError;
-            
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    console.log(`🔗 Trying CORS proxy ${i + 1}:`, proxies[i]);
-                    response = await fetch(proxies[i], {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-client': CONFIG.API_CLIENT,
-                            'x-api-key': CONFIG.API_KEY,
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify(entitlementData)
-                    });
-                    
-                    if (response.ok) {
-                        console.log(`✅ CORS proxy ${i + 1} succeeded`);
-                        break;
-                    } else {
-                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
-                    }
-                } catch (error) {
-                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
-                    lastError = error;
-                    if (i === proxies.length - 1) throw lastError;
-                }
-            }
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    url: targetUrl,
+                    method: 'POST',
+                    headers: JSON.stringify({
+                        'Content-Type': 'application/json',
+                        'x-api-client': CONFIG.API_CLIENT,
+                        'x-api-key': CONFIG.API_KEY
+                    }),
+                    body: JSON.stringify(entitlementData)
+                })
+            });
 
             console.log('📡 Entitlement response:');
             console.log('  - Status:', response.status);
@@ -441,43 +435,35 @@
             formData.append('file', blob, filename);
             formData.append('entitlement_id', entitlementId);
 
-            // Try multiple CORS proxies for upload
-            console.log('🔗 Trying multiple CORS proxies for upload...');
+            // Use your own proxy server for upload
+            console.log('🔗 Using custom proxy server for upload...');
             
-            const proxies = [
-                'https://api.allorigins.win/raw?url=https%3A%2F%2Fapi.moodys.com%2Fcopilot%2Fv1%2Fingestion%2Fupload',
-                'https://thingproxy.freeboard.io/fetch/https://api.moodys.com/copilot/v1/ingestion/upload',
-                'https://cors-anywhere.herokuapp.com/https://api.moodys.com/copilot/v1/ingestion/upload'
-            ];
+            const proxyUrl = 'https://mbmoodys.github.io/proxy.php';
+            const targetUrl = `${CONFIG.COPILOT_BASE_URL}/ingestion/upload`;
+            console.log('Using custom proxy:', proxyUrl);
+            console.log('Target URL:', targetUrl);
             
-            let response;
-            let lastError;
-            
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    console.log(`🔗 Trying CORS proxy ${i + 1} for upload:`, proxies[i]);
-                    response = await fetch(proxies[i], {
-                        method: 'POST',
-                        headers: {
-                            'x-api-client': client,
-                            'x-api-key': key,
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: formData
-                    });
-                    
-                    if (response.ok) {
-                        console.log(`✅ CORS proxy ${i + 1} succeeded for upload`);
-                        break;
-                    } else {
-                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
-                    }
-                } catch (error) {
-                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
-                    lastError = error;
-                    if (i === proxies.length - 1) throw lastError;
-                }
+            // Convert FormData to regular object for proxy
+            const formDataObj = {};
+            for (let [key, value] of formData.entries()) {
+                formDataObj[key] = value;
             }
+            
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    url: targetUrl,
+                    method: 'POST',
+                    headers: JSON.stringify({
+                        'x-api-client': client,
+                        'x-api-key': key
+                    }),
+                    body: JSON.stringify(formDataObj)
+                })
+            });
 
             if (!response.ok) {
                 throw new Error(`Upload failed: ${response.status}`);
@@ -514,53 +500,39 @@
 
 Provide evidence-based insights with specific data points from the report.`;
 
-            // Try multiple CORS proxies for AskMyData
-            console.log('🔗 Trying multiple CORS proxies for AskMyData...');
+            // Use your own proxy server for AskMyData
+            console.log('🔗 Using custom proxy server for AskMyData...');
             
-            const proxies = [
-                'https://api.allorigins.win/raw?url=https%3A%2F%2Fapi.moodys.com%2Faskmydata%2Fv1%2Fask',
-                'https://thingproxy.freeboard.io/fetch/https://api.moodys.com/askmydata/v1/ask',
-                'https://cors-anywhere.herokuapp.com/https://api.moodys.com/askmydata/v1/ask'
-            ];
+            const proxyUrl = 'https://mbmoodys.github.io/proxy.php';
+            const targetUrl = CONFIG.ASK_MY_DATA_URL;
+            console.log('Using custom proxy:', proxyUrl);
+            console.log('Target URL:', targetUrl);
             
-            let response;
-            let lastError;
-            
-            for (let i = 0; i < proxies.length; i++) {
-                try {
-                    console.log(`🔗 Trying CORS proxy ${i + 1} for AskMyData:`, proxies[i]);
-                    response = await fetch(proxies[i], {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-client': CONFIG.API_CLIENT,
-                            'x-api-key': CONFIG.API_KEY,
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({
-                            source: { name: 'orbis-integration', version: '1.0.0' },
-                            stream: false,
-                            system_prompt: systemPrompt,
-                            messages: [{
-                                role: 'user',
-                                content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
-                            }],
-                            entitlement_ids: [entitlementId]
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        console.log(`✅ CORS proxy ${i + 1} succeeded for AskMyData`);
-                        break;
-                    } else {
-                        console.log(`❌ CORS proxy ${i + 1} failed with status:`, response.status);
-                    }
-                } catch (error) {
-                    console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
-                    lastError = error;
-                    if (i === proxies.length - 1) throw lastError;
-                }
-            }
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    url: targetUrl,
+                    method: 'POST',
+                    headers: JSON.stringify({
+                        'Content-Type': 'application/json',
+                        'x-api-client': CONFIG.API_CLIENT,
+                        'x-api-key': CONFIG.API_KEY
+                    }),
+                    body: JSON.stringify({
+                        source: { name: 'orbis-integration', version: '1.0.0' },
+                        stream: false,
+                        system_prompt: systemPrompt,
+                        messages: [{
+                            role: 'user',
+                            content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
+                        }],
+                        entitlement_ids: [entitlementId]
+                    })
+                })
+            });
 
             if (!response.ok) {
                 throw new Error(`AI analysis failed: ${response.status}`);
