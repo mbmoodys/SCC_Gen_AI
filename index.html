@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v8.1 (No CORS Proxies)</title>
+    <title>AI Analysis - Orbis Integration v8.2 (CORS Proxy for Orbis + Moody)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v8.1 NO CORS PROXIES - direct calls only');
+            console.log('🚀 Page loaded - v8.2 CORS proxy for Orbis + Moody APIs');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -340,9 +340,13 @@
             console.log('  - PDF URL:', pdfUrl);
             
             try {
-                console.log('🌐 Making direct fetch request to Orbis...');
+                console.log('🌐 Making request to Orbis via CORS proxy...');
                 
-                const response = await fetch(pdfUrl, {
+                // Use CORS proxy for Orbis (GET request works)
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`;
+                console.log('🔗 Using CORS proxy:', proxyUrl);
+                
+                const response = await fetch(proxyUrl, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/pdf',
@@ -385,15 +389,19 @@
             };
             console.log('  - Entitlement Data:', entitlementData);
 
-            // Try direct API call first (might work from some domains)
-            console.log('🔗 Trying direct API call to Moody...');
+            // Try using a public CORS proxy that supports custom headers
+            console.log('🔗 Trying CORS proxy with custom headers...');
             
-            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/entitlements`, {
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/https://api.moodys.com/copilot/v1/entitlements';
+            console.log('Using CORS proxy:', proxyUrl);
+            
+            const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-api-client': CONFIG.API_CLIENT,
-                    'x-api-key': CONFIG.API_KEY
+                    'x-api-key': CONFIG.API_KEY,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify(entitlementData)
             });
