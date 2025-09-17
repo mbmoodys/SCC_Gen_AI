@@ -283,30 +283,41 @@
         // Start the analysis process
         async function startAnalysis() {
             try {
+                console.log('🚀 Starting AI analysis process...');
                 updateStatus('Starting AI analysis process...', 'info');
                 updateSpinner('Downloading company report...');
 
                 // Step 1: Download PDF from Orbis
+                console.log('📄 Step 1: Starting PDF download from Orbis...');
                 const pdfBlob = await downloadOrbisPDF();
+                console.log('✅ Step 1: PDF download completed successfully');
                 updateSpinner('Uploading document to AI system...');
 
                 // Step 2: Create entitlement
+                console.log('🔑 Step 2: Creating Copilot entitlement...');
                 currentEntitlementId = await createEntitlement();
+                console.log('✅ Step 2: Entitlement created successfully:', currentEntitlementId);
                 updateSpinner('Processing document...');
 
                 // Step 3: Upload PDF to Copilot
+                console.log('📤 Step 3: Uploading PDF to Copilot...');
                 const uploadResult = await uploadToIngestion(pdfBlob, CONFIG.API_CLIENT, CONFIG.API_KEY, currentEntitlementId, 'orbis-report.pdf');
+                console.log('✅ Step 3: PDF uploaded successfully:', uploadResult);
                 updateSpinner('Generating AI analysis...');
 
                 // Step 4: Get AI analysis
+                console.log('🤖 Step 4: Generating AI analysis...');
                 const analysis = await getAIAnalysis(currentEntitlementId);
+                console.log('✅ Step 4: AI analysis completed');
                 
                 // Step 5: Display results
+                console.log('📊 Step 5: Displaying results...');
                 displayResults(analysis);
                 updateStatus('Analysis completed successfully!', 'success');
+                console.log('🎉 All steps completed successfully!');
 
             } catch (error) {
-                console.error('Analysis failed:', error);
+                console.error('❌ Analysis failed:', error);
                 updateStatus(`Analysis failed: ${error.message}`, 'error');
                 updateSpinner('Analysis failed. Please try again.');
             }
@@ -319,10 +330,13 @@
             
             const pdfUrl = `https://orbis.bvdinfo.com/Orbis/companies/Report?BvDID=${currentBvDID}&export=pdf&loginfromcontext=${contextToken}`;
             
-            console.log('Using context token:', contextToken);
-            console.log('PDF URL:', pdfUrl);
+            console.log('🔍 PDF Download Details:');
+            console.log('  - BvD ID:', currentBvDID);
+            console.log('  - Context Token:', contextToken);
+            console.log('  - PDF URL:', pdfUrl);
             
             try {
+                console.log('🌐 Making fetch request to Orbis...');
                 const response = await fetch(pdfUrl, {
                     method: 'GET',
                     credentials: 'include', // Include cookies for authentication
@@ -332,20 +346,39 @@
                     }
                 });
 
+                console.log('📡 Response received:');
+                console.log('  - Status:', response.status);
+                console.log('  - Status Text:', response.statusText);
+                console.log('  - Headers:', Object.fromEntries(response.headers.entries()));
+
                 if (!response.ok) {
                     throw new Error(`Failed to download PDF: ${response.status} ${response.statusText}`);
                 }
 
+                console.log('📄 Converting response to blob...');
                 const blob = await response.blob();
-                console.log('PDF downloaded successfully:', blob.size, 'bytes');
+                console.log('✅ PDF downloaded successfully:', blob.size, 'bytes');
+                console.log('  - Blob type:', blob.type);
                 return blob;
             } catch (error) {
+                console.error('❌ PDF download error:', error);
                 throw new Error(`PDF download failed: ${error.message}`);
             }
         }
 
         // Create entitlement
         async function createEntitlement() {
+            console.log('🔑 Creating entitlement with:');
+            console.log('  - API Client:', CONFIG.API_CLIENT);
+            console.log('  - API Key:', CONFIG.API_KEY ? '***' + CONFIG.API_KEY.slice(-4) : 'NOT SET');
+            console.log('  - Base URL:', CONFIG.COPILOT_BASE_URL);
+            
+            const entitlementData = {
+                name: `Orbis Analysis - ${currentBvDID}`,
+                description: `AI analysis of Orbis report for company ${currentBvDID}`
+            };
+            console.log('  - Entitlement Data:', entitlementData);
+
             const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/entitlements`, {
                 method: 'POST',
                 headers: {
@@ -353,18 +386,21 @@
                     'x-api-client': CONFIG.API_CLIENT,
                     'x-api-key': CONFIG.API_KEY
                 },
-                body: JSON.stringify({
-                    name: `Orbis Analysis - ${currentBvDID}`,
-                    description: `AI analysis of Orbis report for company ${currentBvDID}`
-                })
+                body: JSON.stringify(entitlementData)
             });
 
+            console.log('📡 Entitlement response:');
+            console.log('  - Status:', response.status);
+            console.log('  - Status Text:', response.statusText);
+
             if (!response.ok) {
-                throw new Error(`Failed to create entitlement: ${response.status}`);
+                const errorText = await response.text();
+                console.error('❌ Entitlement creation failed:', errorText);
+                throw new Error(`Failed to create entitlement: ${response.status} - ${errorText}`);
             }
 
             const result = await response.json();
-            console.log('Entitlement created:', result.id);
+            console.log('✅ Entitlement created successfully:', result);
             return result.id;
         }
 
