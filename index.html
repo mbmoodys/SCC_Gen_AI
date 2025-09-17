@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v6.0 (Test Mode - Skip PDF)</title>
+    <title>AI Analysis - Orbis Integration v6.1 (CORS Proxy for All APIs)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v6.0 TEST MODE (skip PDF download, test Copilot)');
+            console.log('🚀 Page loaded - v6.1 with CORS proxy for ALL APIs (Orbis + Moody)');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -391,7 +391,7 @@
 
         // Create entitlement
         async function createEntitlement() {
-            console.log('🔑 Creating entitlement (Direct API call):');
+            console.log('🔑 Creating entitlement (via CORS proxy):');
             console.log('  - API Client:', CONFIG.API_CLIENT);
             console.log('  - API Key:', CONFIG.API_KEY ? '***' + CONFIG.API_KEY.slice(-4) : 'NOT SET');
             console.log('  - Base URL:', CONFIG.COPILOT_BASE_URL);
@@ -402,7 +402,12 @@
             };
             console.log('  - Entitlement Data:', entitlementData);
 
-            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/entitlements`, {
+            // Use CORS proxy for Moody's API
+            const apiUrl = `${CONFIG.COPILOT_BASE_URL}/entitlements`;
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+            console.log('🔗 Using CORS proxy for Moody API:', proxyUrl);
+
+            const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -429,12 +434,17 @@
 
         // Upload to ingestion
         async function uploadToIngestion(blob, client, key, entitlementId, filename) {
-            console.log('📤 Uploading to ingestion (Direct API call):');
+            console.log('📤 Uploading to ingestion (via CORS proxy):');
             const formData = new FormData();
             formData.append('file', blob, filename);
             formData.append('entitlement_id', entitlementId);
 
-            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/ingestion/upload`, {
+            // Use CORS proxy for Moody's API
+            const apiUrl = `${CONFIG.COPILOT_BASE_URL}/ingestion/upload`;
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+            console.log('🔗 Using CORS proxy for upload:', proxyUrl);
+
+            const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
                     'x-api-client': client,
@@ -478,7 +488,11 @@
 
 Provide evidence-based insights with specific data points from the report.`;
 
-            const response = await fetch(CONFIG.ASK_MY_DATA_URL, {
+            // Use CORS proxy for Moody's API
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(CONFIG.ASK_MY_DATA_URL)}`;
+            console.log('🔗 Using CORS proxy for AskMyData:', proxyUrl);
+
+            const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
