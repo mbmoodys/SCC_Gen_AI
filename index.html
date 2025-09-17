@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v4.0</title>
+    <title>AI Analysis - Orbis Integration v5.0 (Basic Requests)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v4.0 with CORS proxy for Orbis only, direct calls for Moody APIs');
+            console.log('🚀 Page loaded - v5.0 with BASIC requests (no CORS proxies)');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -286,28 +286,36 @@
             try {
                 console.log('🚀 Starting AI analysis process...');
                 updateStatus('Starting AI analysis process...', 'info');
-                updateSpinner('Testing Copilot APIs...');
+                updateSpinner('Downloading company report...');
 
-                // TEST MODE: Skip PDF download and test Copilot directly
-                console.log('🧪 TEST MODE: Skipping PDF download, testing Copilot APIs...');
-                updateStatus('TEST MODE: Testing Copilot APIs...', 'info');
+                // Step 1: Download PDF from Orbis (BASIC VERSION)
+                console.log('📄 Step 1: Starting PDF download from Orbis...');
+                const pdfBlob = await downloadOrbisPDF();
+                console.log('✅ Step 1: PDF download completed successfully');
+                updateSpinner('Uploading document to AI system...');
 
-                // Step 1: Create entitlement (test Copilot)
-                console.log('🔑 Step 1: Testing entitlement creation...');
+                // Step 2: Create entitlement
+                console.log('🔑 Step 2: Creating Copilot entitlement...');
                 currentEntitlementId = await createEntitlement();
-                console.log('✅ Step 1: Entitlement created successfully:', currentEntitlementId);
-                updateSpinner('Testing AI analysis...');
+                console.log('✅ Step 2: Entitlement created successfully:', currentEntitlementId);
+                updateSpinner('Processing document...');
 
-                // Step 2: Test AskMyData (without PDF)
-                console.log('🤖 Step 2: Testing AskMyData API...');
+                // Step 3: Upload PDF to Copilot
+                console.log('📤 Step 3: Uploading PDF to Copilot...');
+                const uploadResult = await uploadToIngestion(pdfBlob, CONFIG.API_CLIENT, CONFIG.API_KEY, currentEntitlementId, 'orbis-report.pdf');
+                console.log('✅ Step 3: PDF uploaded successfully:', uploadResult);
+                updateSpinner('Generating AI analysis...');
+
+                // Step 4: Get AI analysis
+                console.log('🤖 Step 4: Generating AI analysis...');
                 const analysis = await getAIAnalysis(currentEntitlementId);
-                console.log('✅ Step 2: AI analysis completed');
+                console.log('✅ Step 4: AI analysis completed');
                 
-                // Step 3: Display results
-                console.log('📊 Step 3: Displaying results...');
+                // Step 5: Display results
+                console.log('📊 Step 5: Displaying results...');
                 displayResults(analysis);
-                updateStatus('Copilot APIs working! PDF download needs CORS fix.', 'success');
-                console.log('🎉 Copilot test completed successfully!');
+                updateStatus('Analysis completed successfully!', 'success');
+                console.log('🎉 All steps completed successfully!');
 
             } catch (error) {
                 console.error('❌ Analysis failed:', error);
@@ -316,11 +324,11 @@
             }
         }
 
-        // Download PDF from Orbis
+        // Download PDF from Orbis - BASIC VERSION
         async function downloadOrbisPDF() {
             // Use username and password authentication
             const username = 'smartURLArchitect';
-            const password = 'SmartURL1234!'; // You'll need to provide this
+            const password = 'SmartURL1234!';
             
             const pdfUrl = `https://orbis.bvdinfo.com/Orbis/companies/Report?BvDID=${currentBvDID}&export=pdf&user=${encodeURIComponent(username)}&pw=${encodeURIComponent(password)}`;
             
@@ -331,41 +339,16 @@
             console.log('  - PDF URL:', pdfUrl);
             
             try {
-                console.log('🌐 Making fetch request to Orbis with username/password...');
-                // Try multiple CORS proxies
-            const proxies = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(pdfUrl)}`,
-                `https://cors-anywhere.herokuapp.com/${pdfUrl}`,
-                `https://thingproxy.freeboard.io/fetch/${pdfUrl}`,
-                `https://cors.bridged.cc/?${pdfUrl}`
-            ];
+                console.log('🌐 Making DIRECT fetch request to Orbis (no CORS proxies)...');
                 
-                let response;
-                let lastError;
-                
-                for (let i = 0; i < proxies.length; i++) {
-                    try {
-                        console.log(`🔗 Trying CORS proxy ${i + 1}:`, proxies[i]);
-                        response = await fetch(proxies[i], {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/pdf',
-                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            console.log(`✅ CORS proxy ${i + 1} succeeded`);
-                            break;
-                        }
-                    } catch (error) {
-                        console.log(`❌ CORS proxy ${i + 1} failed:`, error.message);
-                        lastError = error;
-                        if (i === proxies.length - 1) throw lastError;
+                const response = await fetch(pdfUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/pdf',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
-                }
+                });
 
                 console.log('📡 Response received:');
                 console.log('  - Status:', response.status);
