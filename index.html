@@ -406,15 +406,40 @@
             };
             console.log('  - Entitlement Data:', entitlementData);
 
-            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/entitlements`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-client': CONFIG.API_CLIENT,
-                    'x-api-key': CONFIG.API_KEY
-                },
-                body: JSON.stringify(entitlementData)
-            });
+            const originalUrl = `${CONFIG.COPILOT_BASE_URL}/entitlements`;
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`,
+                `https://cors-anywhere.herokuapp.com/${originalUrl}`
+            ];
+            
+            let response;
+            let lastError;
+            
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    console.log(`🔗 Trying CORS proxy ${i + 1} for Copilot API:`, proxies[i]);
+                    response = await fetch(proxies[i], {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-client': CONFIG.API_CLIENT,
+                            'x-api-key': CONFIG.API_KEY,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(entitlementData)
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`✅ CORS proxy ${i + 1} succeeded for Copilot API`);
+                        break;
+                    }
+                } catch (error) {
+                    console.log(`❌ CORS proxy ${i + 1} failed for Copilot API:`, error.message);
+                    lastError = error;
+                    if (i === proxies.length - 1) throw lastError;
+                }
+            }
 
             console.log('📡 Entitlement response:');
             console.log('  - Status:', response.status);
@@ -433,18 +458,44 @@
 
         // Upload to ingestion
         async function uploadToIngestion(blob, client, key, entitlementId, filename) {
+            console.log('📤 Uploading to ingestion with CORS proxy...');
             const formData = new FormData();
             formData.append('file', blob, filename);
             formData.append('entitlement_id', entitlementId);
 
-            const response = await fetch(`${CONFIG.COPILOT_BASE_URL}/ingestion/upload`, {
-                method: 'POST',
-                headers: {
-                    'x-api-client': client,
-                    'x-api-key': key
-                },
-                body: formData
-            });
+            const originalUrl = `${CONFIG.COPILOT_BASE_URL}/ingestion/upload`;
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`,
+                `https://cors-anywhere.herokuapp.com/${originalUrl}`
+            ];
+            
+            let response;
+            let lastError;
+            
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    console.log(`🔗 Trying CORS proxy ${i + 1} for upload:`, proxies[i]);
+                    response = await fetch(proxies[i], {
+                        method: 'POST',
+                        headers: {
+                            'x-api-client': client,
+                            'x-api-key': key,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`✅ CORS proxy ${i + 1} succeeded for upload`);
+                        break;
+                    }
+                } catch (error) {
+                    console.log(`❌ CORS proxy ${i + 1} failed for upload:`, error.message);
+                    lastError = error;
+                    if (i === proxies.length - 1) throw lastError;
+                }
+            }
 
             if (!response.ok) {
                 throw new Error(`Upload failed: ${response.status}`);
@@ -481,24 +532,51 @@
 
 Provide evidence-based insights with specific data points from the report.`;
 
-            const response = await fetch(CONFIG.ASK_MY_DATA_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-client': CONFIG.API_CLIENT,
-                    'x-api-key': CONFIG.API_KEY
-                },
-                body: JSON.stringify({
-                    source: { name: 'orbis-integration', version: '1.0.0' },
-                    stream: false,
-                    system_prompt: systemPrompt,
-                    messages: [{
-                        role: 'user',
-                        content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
-                    }],
-                    entitlement_ids: [entitlementId]
-                })
-            });
+            const originalUrl = CONFIG.ASK_MY_DATA_URL;
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(originalUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(originalUrl)}`,
+                `https://cors-anywhere.herokuapp.com/${originalUrl}`
+            ];
+            
+            const requestBody = {
+                source: { name: 'orbis-integration', version: '1.0.0' },
+                stream: false,
+                system_prompt: systemPrompt,
+                messages: [{
+                    role: 'user',
+                    content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
+                }],
+                entitlement_ids: [entitlementId]
+            };
+            
+            let response;
+            let lastError;
+            
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    console.log(`🔗 Trying CORS proxy ${i + 1} for AI analysis:`, proxies[i]);
+                    response = await fetch(proxies[i], {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-client': CONFIG.API_CLIENT,
+                            'x-api-key': CONFIG.API_KEY,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`✅ CORS proxy ${i + 1} succeeded for AI analysis`);
+                        break;
+                    }
+                } catch (error) {
+                    console.log(`❌ CORS proxy ${i + 1} failed for AI analysis:`, error.message);
+                    lastError = error;
+                    if (i === proxies.length - 1) throw lastError;
+                }
+            }
 
             if (!response.ok) {
                 throw new Error(`AI analysis failed: ${response.status}`);
