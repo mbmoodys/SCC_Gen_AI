@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v9.0 (Custom Proxy Server)</title>
+    <title>AI Analysis - Orbis Integration v9.1 (Direct + Fallback)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v9.0 using custom proxy server for all APIs');
+            console.log('🚀 Page loaded - v9.1 trying direct calls first, then CORS proxy fallback');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -333,27 +333,20 @@
             try {
                 console.log('🌐 Making request to Orbis via custom proxy...');
                 
-                // Use your own proxy server for Orbis PDF
-                const proxyUrl = 'https://mbmoodys.github.io/proxy.php';
-                console.log('🔗 Using custom proxy:', proxyUrl);
-                console.log('Target URL:', pdfUrl);
-                
-                const response = await fetch(proxyUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        url: pdfUrl,
-                        method: 'GET',
-                        headers: JSON.stringify({
-                            'Accept': 'application/pdf',
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                        })
-                    }),
-                    // Add timeout for slow Orbis API
-                    signal: AbortSignal.timeout(180000) // 3 minute timeout
-                });
+            // Use a working CORS proxy for Orbis PDF
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`;
+            console.log('🔗 Using CORS proxy:', proxyUrl);
+            console.log('Target URL:', pdfUrl);
+            
+            const response = await fetch(proxyUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/pdf',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                // Add timeout for slow Orbis API
+                signal: AbortSignal.timeout(180000) // 3 minute timeout
+            });
 
                 console.log('📡 Response received:');
                 console.log('  - Status:', response.status);
@@ -388,30 +381,37 @@
             };
             console.log('  - Entitlement Data:', entitlementData);
 
-            // Use your own proxy server
-            console.log('🔗 Using custom proxy server...');
+            // Try direct call first, then fallback to proxy
+            console.log('🔗 Trying direct API call first...');
             
-            const proxyUrl = 'https://mbmoodys.github.io/proxy.php';
-            const targetUrl = `${CONFIG.COPILOT_BASE_URL}/entitlements`;
-            console.log('Using custom proxy:', proxyUrl);
-            console.log('Target URL:', targetUrl);
-            
-            const response = await fetch(proxyUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    url: targetUrl,
+            let response;
+            try {
+                // Try direct call first
+                response = await fetch(`${CONFIG.COPILOT_BASE_URL}/entitlements`, {
                     method: 'POST',
-                    headers: JSON.stringify({
+                    headers: {
                         'Content-Type': 'application/json',
                         'x-api-client': CONFIG.API_CLIENT,
                         'x-api-key': CONFIG.API_KEY
-                    }),
+                    },
                     body: JSON.stringify(entitlementData)
-                })
-            });
+                });
+                console.log('✅ Direct API call succeeded');
+            } catch (error) {
+                console.log('❌ Direct API call failed, trying CORS proxy...');
+                // Fallback to CORS proxy
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`${CONFIG.COPILOT_BASE_URL}/entitlements`)}`;
+                response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-client': CONFIG.API_CLIENT,
+                        'x-api-key': CONFIG.API_KEY
+                    },
+                    body: JSON.stringify(entitlementData)
+                });
+                console.log('✅ CORS proxy call succeeded');
+            }
 
             console.log('📡 Entitlement response:');
             console.log('  - Status:', response.status);
@@ -435,35 +435,35 @@
             formData.append('file', blob, filename);
             formData.append('entitlement_id', entitlementId);
 
-            // Use your own proxy server for upload
-            console.log('🔗 Using custom proxy server for upload...');
+            // Try direct call first, then fallback to proxy
+            console.log('🔗 Trying direct upload call first...');
             
-            const proxyUrl = 'https://mbmoodys.github.io/proxy.php';
-            const targetUrl = `${CONFIG.COPILOT_BASE_URL}/ingestion/upload`;
-            console.log('Using custom proxy:', proxyUrl);
-            console.log('Target URL:', targetUrl);
-            
-            // Convert FormData to regular object for proxy
-            const formDataObj = {};
-            for (let [key, value] of formData.entries()) {
-                formDataObj[key] = value;
-            }
-            
-            const response = await fetch(proxyUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    url: targetUrl,
+            let response;
+            try {
+                // Try direct call first
+                response = await fetch(`${CONFIG.COPILOT_BASE_URL}/ingestion/upload`, {
                     method: 'POST',
-                    headers: JSON.stringify({
+                    headers: {
                         'x-api-client': client,
                         'x-api-key': key
-                    }),
-                    body: JSON.stringify(formDataObj)
-                })
-            });
+                    },
+                    body: formData
+                });
+                console.log('✅ Direct upload call succeeded');
+            } catch (error) {
+                console.log('❌ Direct upload call failed, trying CORS proxy...');
+                // Fallback to CORS proxy
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`${CONFIG.COPILOT_BASE_URL}/ingestion/upload`)}`;
+                response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'x-api-client': client,
+                        'x-api-key': key
+                    },
+                    body: formData
+                });
+                console.log('✅ CORS proxy upload call succeeded');
+            }
 
             if (!response.ok) {
                 throw new Error(`Upload failed: ${response.status}`);
@@ -500,27 +500,19 @@
 
 Provide evidence-based insights with specific data points from the report.`;
 
-            // Use your own proxy server for AskMyData
-            console.log('🔗 Using custom proxy server for AskMyData...');
+            // Try direct call first, then fallback to proxy
+            console.log('🔗 Trying direct AskMyData call first...');
             
-            const proxyUrl = 'https://mbmoodys.github.io/proxy.php';
-            const targetUrl = CONFIG.ASK_MY_DATA_URL;
-            console.log('Using custom proxy:', proxyUrl);
-            console.log('Target URL:', targetUrl);
-            
-            const response = await fetch(proxyUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    url: targetUrl,
+            let response;
+            try {
+                // Try direct call first
+                response = await fetch(CONFIG.ASK_MY_DATA_URL, {
                     method: 'POST',
-                    headers: JSON.stringify({
+                    headers: {
                         'Content-Type': 'application/json',
                         'x-api-client': CONFIG.API_CLIENT,
                         'x-api-key': CONFIG.API_KEY
-                    }),
+                    },
                     body: JSON.stringify({
                         source: { name: 'orbis-integration', version: '1.0.0' },
                         stream: false,
@@ -531,8 +523,32 @@ Provide evidence-based insights with specific data points from the report.`;
                         }],
                         entitlement_ids: [entitlementId]
                     })
-                })
-            });
+                });
+                console.log('✅ Direct AskMyData call succeeded');
+            } catch (error) {
+                console.log('❌ Direct AskMyData call failed, trying CORS proxy...');
+                // Fallback to CORS proxy
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(CONFIG.ASK_MY_DATA_URL)}`;
+                response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-client': CONFIG.API_CLIENT,
+                        'x-api-key': CONFIG.API_KEY
+                    },
+                    body: JSON.stringify({
+                        source: { name: 'orbis-integration', version: '1.0.0' },
+                        stream: false,
+                        system_prompt: systemPrompt,
+                        messages: [{
+                            role: 'user',
+                            content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
+                        }],
+                        entitlement_ids: [entitlementId]
+                    })
+                });
+                console.log('✅ CORS proxy AskMyData call succeeded');
+            }
 
             if (!response.ok) {
                 throw new Error(`AI analysis failed: ${response.status}`);
