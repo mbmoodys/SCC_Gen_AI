@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - Orbis Integration v9.1 (Direct + Fallback)</title>
+    <title>AI Analysis - Orbis Integration v10.0 (Your Own Vercel Proxy)</title>
     <style>
         /* Orbis Color Scheme */
         :root {
@@ -267,7 +267,7 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Page loaded - v9.1 trying direct calls first, then CORS proxy fallback');
+            console.log('🚀 Page loaded - v10.0 using your own Vercel proxy for all APIs');
             // Extract BvD ID from URL parameters or set default for testing
             const urlParams = new URLSearchParams(window.location.search);
             currentBvDID = urlParams.get('BvDID') || 'US710415188'; // Default to Bureau van Dijk for testing
@@ -398,19 +398,26 @@
                 });
                 console.log('✅ Direct API call succeeded');
             } catch (error) {
-                console.log('❌ Direct API call failed, trying CORS proxy...');
-                // Fallback to CORS proxy
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`${CONFIG.COPILOT_BASE_URL}/entitlements`)}`;
+                console.log('❌ Direct API call failed, trying your own Vercel proxy...');
+                // Use your own Vercel proxy
+                const proxyUrl = 'https://scc-gen-ai.vercel.app/api/proxy';
                 response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-client': CONFIG.API_CLIENT,
-                        'x-api-key': CONFIG.API_KEY
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(entitlementData)
+                    body: JSON.stringify({
+                        url: `${CONFIG.COPILOT_BASE_URL}/entitlements`,
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-client': CONFIG.API_CLIENT,
+                            'x-api-key': CONFIG.API_KEY
+                        },
+                        body: JSON.stringify(entitlementData)
+                    })
                 });
-                console.log('✅ CORS proxy call succeeded');
+                console.log('✅ Your own Vercel proxy call succeeded');
             }
 
             console.log('📡 Entitlement response:');
@@ -451,18 +458,25 @@
                 });
                 console.log('✅ Direct upload call succeeded');
             } catch (error) {
-                console.log('❌ Direct upload call failed, trying CORS proxy...');
-                // Fallback to CORS proxy
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`${CONFIG.COPILOT_BASE_URL}/ingestion/upload`)}`;
+                console.log('❌ Direct upload call failed, trying your own Vercel proxy...');
+                // Use your own Vercel proxy
+                const proxyUrl = 'https://scc-gen-ai.vercel.app/api/proxy';
                 response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: {
-                        'x-api-client': client,
-                        'x-api-key': key
+                        'Content-Type': 'application/json'
                     },
-                    body: formData
+                    body: JSON.stringify({
+                        url: `${CONFIG.COPILOT_BASE_URL}/ingestion/upload`,
+                        method: 'POST',
+                        headers: {
+                            'x-api-client': client,
+                            'x-api-key': key
+                        },
+                        body: formData
+                    })
                 });
-                console.log('✅ CORS proxy upload call succeeded');
+                console.log('✅ Your own Vercel proxy upload call succeeded');
             }
 
             if (!response.ok) {
@@ -526,28 +540,35 @@ Provide evidence-based insights with specific data points from the report.`;
                 });
                 console.log('✅ Direct AskMyData call succeeded');
             } catch (error) {
-                console.log('❌ Direct AskMyData call failed, trying CORS proxy...');
-                // Fallback to CORS proxy
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(CONFIG.ASK_MY_DATA_URL)}`;
+                console.log('❌ Direct AskMyData call failed, trying your own Vercel proxy...');
+                // Use your own Vercel proxy
+                const proxyUrl = 'https://scc-gen-ai.vercel.app/api/proxy';
                 response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-client': CONFIG.API_CLIENT,
-                        'x-api-key': CONFIG.API_KEY
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        source: { name: 'orbis-integration', version: '1.0.0' },
-                        stream: false,
-                        system_prompt: systemPrompt,
-                        messages: [{
-                            role: 'user',
-                            content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
-                        }],
-                        entitlement_ids: [entitlementId]
+                        url: CONFIG.ASK_MY_DATA_URL,
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-client': CONFIG.API_CLIENT,
+                            'x-api-key': CONFIG.API_KEY
+                        },
+                        body: JSON.stringify({
+                            source: { name: 'orbis-integration', version: '1.0.0' },
+                            stream: false,
+                            system_prompt: systemPrompt,
+                            messages: [{
+                                role: 'user',
+                                content: 'Please analyze the provided Orbis company report and provide a comprehensive financial and risk analysis.'
+                            }],
+                            entitlement_ids: [entitlementId]
+                        })
                     })
                 });
-                console.log('✅ CORS proxy AskMyData call succeeded');
+                console.log('✅ Your own Vercel proxy AskMyData call succeeded');
             }
 
             if (!response.ok) {
